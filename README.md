@@ -30,17 +30,21 @@ $$
 \mathbf{r}(T_i, T_j) = R_i^T (\mathbf{p}_j - \mathbf{p}_i) - \Delta \mathbf{p}_{\text{wheel}}
 $$
 
-### Analytical Jacobians (GTSAM Local Tangent Space se(3))
+### Analytical Jacobians (GTSAM Local Tangent Space)
+
 Under GTSAM local body manifold parameterisation with tangent space perturbation vector $\boldsymbol{\xi} = [\boldsymbol{\omega}^T, \mathbf{v}^T]^T \in \mathfrak{se}(3)$:
 
-- **With respect to Pose $i$** ($H_1 \in \mathbb{R}^{3 \times 6}$):
-  $$
-  H_1 = \frac{\partial \mathbf{r}}{\partial T_i} = \begin{bmatrix} (R_i^T (\mathbf{p}_j - \mathbf{p}_i))^\times & -I_{3 \times 3} \end{bmatrix}
-  $$
+**With respect to Pose $i$** ($H_1 \in \mathbb{R}^{3 \times 6}$):
 
-- **With respect to Pose $j$** ($H_2 \in \mathbb{R}^{3 \times 6}$):
-  $$
-  H_2 = \frac{\partial \mathbf{r}}{\partial T_j} = \begin{bmatrix} \mathbf{0}_{3 \times 3} & R_i^T R_j \end{bmatrix}
+$$
+H_1 = \frac{\partial \mathbf{r}}{\partial T_i} = \begin{bmatrix} (R_i^T (\mathbf{p}_j - \mathbf{p}_i))^\times & -I_{3 \times 3} \end{bmatrix}
+$$
+
+**With respect to Pose $j$** ($H_2 \in \mathbb{R}^{3 \times 6}$):
+
+$$
+H_2 = \frac{\partial \mathbf{r}}{\partial T_j} = \begin{bmatrix} \mathbf{0}_{3 \times 3} & R_i^T R_j \end{bmatrix}
+$$
   $$
 
 ## Repository Structure
