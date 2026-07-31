@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -7,15 +8,21 @@ import pandas as pd
 def evaluate_trajectory():
     print("=== Plotting Trajectory Comparison (VI vs VIWO) ===")
     
+    # Resolve directory path relative to this script file
+    script_dir = Path(__file__).resolve().parent
+    repo_root = script_dir.parent
+    csv_path = repo_root / "trajectory_results.csv"
+    output_image_path = repo_root / "ate_trajectory_plot.png"
+    
     try:
-        df = pd.read_csv("trajectory_results.csv")
+        df = pd.read_csv(csv_path)
     except FileNotFoundError:
         print("Trajectory file not found. Generating sample telemetry data for visualization...")
         t = np.linspace(0, 10, 100)
         gt_x = 10.0 * np.sin(0.1 * t)
         gt_y = 10.0 * (1.0 - np.cos(0.1 * t))
-        vi_x = gt_x * (1.0 + 0.05 * t/10.0)
-        vi_y = gt_y * (1.0 + 0.08 * t/10.0)
+        vi_x = gt_x * (1.0 + 0.05 * t / 10.0)
+        vi_y = gt_y * (1.0 + 0.08 * t / 10.0)
         viwo_x = gt_x + np.random.normal(0, 0.02, 100)
         viwo_y = gt_y + np.random.normal(0, 0.02, 100)
         df = pd.DataFrame({'time': t, 'gt_x': gt_x, 'gt_y': gt_y,
@@ -53,8 +60,8 @@ def evaluate_trajectory():
     ax.legend()
 
     plt.tight_layout()
-    plt.savefig("viwo-factor-graph/ate_trajectory_plot.png", dpi=300)
-    print("Trajectory plot saved to ate_trajectory_plot.png")
+    plt.savefig(output_image_path, dpi=300)
+    print(f"Trajectory plot saved to {output_image_path}")
 
 if __name__ == "__main__":
     evaluate_trajectory()
