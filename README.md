@@ -24,14 +24,17 @@ Monocular Visual-Inertial Odometry (VIO) inherently suffers from metric scale dr
 ## Mathematical Formulation
 
 ### Custom Wheel Factor Residual
-Given two consecutive $SE(3)$ keyframe poses $T_i = (R_i, p_i)$ and $T_j = (R_j, p_j)$, the relative body-frame displacement residual $\mathbf{r}(T_i, T_j)$ is defined as:
+Given two consecutive $SE(3)$ keyframe poses $T_i = (R_i, \mathbf{p}_i)$ and $T_j = (R_j, \mathbf{p}_j)$, the relative body-frame displacement residual $\mathbf{r}(T_i, T_j) \in \mathbb{R}^3$ is defined as:
 
-$$\mathbf{r}(T_i, T_j) = R_i^T (p_j - p_i) - \Delta \mathbf{p}_{\text{wheel}}$$
+$$\mathbf{r}(T_i, T_j) = R_i^T (\mathbf{p}_j - \mathbf{p}_i) - \Delta \mathbf{p}_{\text{wheel}}$$
 
-### Analytical Jacobians
-- **With respect to Pose $i$:**
-  $$H_1 = \frac{\partial \mathbf{r}}{\partial T_i} = \begin{bmatrix} (R_i^T(p_j - p_i))^\times & -R_i^T \end{bmatrix}$$
-- **With respect to Pose $j$:**
+### Analytical Jacobians (GTSAM Local Tangent Space $\mathfrak{se}(3)$)
+Under GTSAM local body manifold parameterisation with tangent space perturbation vector $\boldsymbol{\xi} = [\boldsymbol{\omega}^T, \mathbf{v}^T]^T \in \mathfrak{se}(3)$:
+
+- **With respect to Pose $i$ ($H_1 \in \mathbb{R}^{3 \times 6}$):**
+  $$H_1 = \frac{\partial \mathbf{r}}{\partial T_i} = \begin{bmatrix} \left(R_i^T (\mathbf{p}_j - \mathbf{p}_i)\right)^\times & -I_{3 \times 3} \end{bmatrix}$$
+
+- **With respect to Pose $j$ ($H_2 \in \mathbb{R}^{3 \times 6}$):**
   $$H_2 = \frac{\partial \mathbf{r}}{\partial T_j} = \begin{bmatrix} \mathbf{0}_{3 \times 3} & R_i^T R_j \end{bmatrix}$$
 
 ## Repository Structure
