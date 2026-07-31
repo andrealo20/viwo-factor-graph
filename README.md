@@ -11,7 +11,7 @@
 
 ## About The Project
 
-Standard monocular Visual-Inertial Odometry (VIO) relies on camera frames and IMU measurements to estimate 3D motion. However, camera-based setups naturally suffer from scale drift over time—especially during constant-velocity motion or when traversing feature-sparse corridors.
+Standard monocular Visual-Inertial Odometry (VIO) relies on camera frames and IMU measurements to estimate 3D motion. However, camera-based setups naturally suffer from scale drift over time, especially during constant-velocity motion or when traversing feature-sparse corridors.
 
 This repository introduces a custom **Wheel Odometry Factor** built for the GTSAM framework. By tightly coupling relative wheel encoder measurements with visual motion and inertial priors inside a non-linear factor graph, the pipeline uses ISAM2 incremental smoothing to lock down real-world metric scale, delivering drift-resistant 3D positioning for mobile platforms.
 ## Benchmark Results
