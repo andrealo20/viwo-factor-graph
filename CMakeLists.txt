@@ -15,3 +15,14 @@ include_directories(
 
 add_executable(viwo_benchmark src/main_benchmark.cpp)
 target_link_libraries(viwo_benchmark PRIVATE gtsam)
+
+# Jacobian verification. This is the test that matters: a wrong analytical
+# derivative does not raise an error, it produces an optimiser that converges
+# to the wrong answer, so it has to be checked against numerical
+# differentiation under GTSAM's own retraction.
+enable_testing()
+
+add_executable(test_jacobians tests/test_jacobians.cpp)
+target_link_libraries(test_jacobians PRIVATE gtsam)
+
+add_test(NAME jacobians COMMAND test_jacobians)

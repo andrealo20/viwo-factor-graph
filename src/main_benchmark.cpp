@@ -37,7 +37,6 @@ int main() {
     double omega = 0.1; // rad/s
 
     std::default_random_engine generator(42);
-    std::normal_distribution<double> visual_noise(0.0, 0.05);  // Visual drift
     std::normal_distribution<double> wheel_noise(0.0, 0.015);  // Wheel encoder noise
 
     double ate_sq_vi = 0.0;

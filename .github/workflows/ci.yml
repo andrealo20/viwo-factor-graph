@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: ubuntu / gcc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtsam-dev libeigen3-dev libboost-dev libtbb-dev
+
+      # The Jacobian test is the one that matters: a wrong analytical
+      # derivative raises no error, it produces an optimiser that converges to
+      # the wrong answer.
+      - name: Build and verify Jacobians
+        run: |
+          g++ -std=c++17 -O2 -Iinclude -I/usr/include/eigen3 \
+              tests/test_jacobians.cpp -lgtsam -ltbb -o test_jacobians
+          ./test_jacobians
+
+      - name: Build and run the benchmark
+        run: |
+          g++ -std=c++17 -O2 -Iinclude -I/usr/include/eigen3 \
+              src/main_benchmark.cpp -lgtsam -ltbb -o viwo_benchmark
+          ./viwo_benchmark | tee -a "$GITHUB_STEP_SUMMARY"

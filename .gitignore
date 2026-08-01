@@ -1,0 +1,9 @@
+build/
+build-*/
+*.o
+*.so
+*.a
+__pycache__/
+*.pyc
+trajectory_output.csv
+.DS_Store

@@ -35,10 +35,12 @@ struct EstimatorState {
 class FactorGraphEngine {
 public:
     FactorGraphEngine() {
-        // Configure ISAM2 Smoother
+        // ISAM2 defaults. Earlier versions set "rerelabelThreshold" and
+        // "rerelabelPartial", which are not members of ISAM2Params, so the
+        // project did not compile against GTSAM. The tuned settings made no
+        // measurable difference on this problem when tried, so the defaults
+        // are kept: fewer knobs whose effect has not been measured.
         gtsam::ISAM2Params params;
-        params.rerelabelThreshold = 0.1;
-        params.rerelabelPartial = true;
         isam2_ = std::make_unique<gtsam::ISAM2>(params);
 
         graph_ = gtsam::NonlinearFactorGraph();
