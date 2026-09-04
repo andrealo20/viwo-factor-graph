@@ -116,7 +116,7 @@ what the result shows:
    observed, so the simulator injects none and the prior holds it at zero. A
    trajectory with pitch or roll excitation would observe it.
 
-Running the same pipeline on a public dataset — EuRoC MAV or KITTI — with real
+Running the same pipeline on a public dataset, EuRoC MAV or KITTI, with real
 IMU, camera and wheel streams is the natural next step and is not done here.
 
 ## Verifying the Jacobians
