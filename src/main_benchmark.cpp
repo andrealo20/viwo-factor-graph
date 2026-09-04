@@ -54,7 +54,8 @@ int main() {
         gtsam::Vector3 gt_vel(1.0 * std::cos(theta), 1.0 * std::sin(theta), 0.0);
 
         // 1. Visual Relative Motion Measurement with metric scale drift
-        double scale_drift = 1.0 + 0.03 * (k / 10.0); // 3% accumulated scale drift
+        double scale_drift = 1.0 + 0.03 * (k / 10.0); // reaches 1.30 by the
+                                                     // last keyframe, so 30%
         gtsam::Pose3 prev_gt(gtsam::Rot3::Yaw(omega * (t - dt)), 
                             gtsam::Point3(radius * std::sin(omega * (t - dt)), 
                                           radius * (1.0 - std::cos(omega * (t - dt))), 0.0));

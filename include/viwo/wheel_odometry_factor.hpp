@@ -13,6 +13,9 @@
 #include <gtsam/base/Matrix.h>
 #include <gtsam/base/Vector.h>
 
+#include <iostream>
+#include <string>
+
 namespace viwo {
 
 /**
@@ -27,9 +30,17 @@ private:
     gtsam::Vector3 measured_delta_p_; // Relative position delta in body frame i
 
 public:
+    typedef gtsam::NoiseModelFactor2<gtsam::Pose3, gtsam::Pose3> Base;
     typedef boost::shared_ptr<WheelOdometryFactor> shared_ptr;
 
-    WheelOdometryFactor() {}
+    /**
+     * @brief Default constructor, for serialisation.
+     *
+     * Eigen does not zero its fixed-size types, so leaving the measurement
+     * uninitialised here would give a default-constructed factor a residual
+     * built from whatever was on the stack, with nothing to signal it.
+     */
+    WheelOdometryFactor() : measured_delta_p_(gtsam::Vector3::Zero()) {}
 
     /**
      * @param key1 Key for Pose3 at time step i
@@ -83,6 +94,44 @@ public:
 
         return error;
     }
+
+    /**
+     * @brief Print the factor and the measurement it carries.
+     *
+     * Without this, graph.print() shows the base class only, so the one piece
+     * of state that distinguishes two wheel factors stays invisible exactly
+     * when someone is inspecting a graph to find out why it is misbehaving.
+     */
+    void print(const std::string& s = "",
+               const gtsam::KeyFormatter& keyFormatter =
+                   gtsam::DefaultKeyFormatter) const override
+    {
+        std::cout << s << "WheelOdometryFactor("
+                  << keyFormatter(this->keys().at(0)) << ","
+                  << keyFormatter(this->keys().at(1)) << ")\n"
+                  << "  measured body-frame displacement: ["
+                  << measured_delta_p_.transpose() << "]\n";
+        if (this->noiseModel()) {
+            this->noiseModel()->print("  noise model: ");
+        }
+    }
+
+    /**
+     * @brief Value equality, which GTSAM's testable concept expects.
+     */
+    bool equals(const gtsam::NonlinearFactor& expected,
+                double tol = 1e-9) const override
+    {
+        const WheelOdometryFactor* other =
+            dynamic_cast<const WheelOdometryFactor*>(&expected);
+        return other != NULL
+            && Base::equals(expected, tol)
+            && gtsam::equal_with_abs_tol(measured_delta_p_,
+                                         other->measured_delta_p_, tol);
+    }
+
+    /** @brief The measurement this factor was built with. */
+    const gtsam::Vector3& measured() const { return measured_delta_p_; }
 
     /**
      * @brief Deep copy method for GTSAM factory

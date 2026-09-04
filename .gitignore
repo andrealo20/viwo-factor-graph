@@ -5,5 +5,5 @@ build-*/
 *.a
 __pycache__/
 *.pyc
-trajectory_output.csv
+trajectory_results.csv
 .DS_Store

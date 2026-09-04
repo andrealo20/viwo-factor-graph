@@ -18,17 +18,43 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtsam-dev libeigen3-dev libboost-dev libtbb-dev
 
-      # The Jacobian test is the one that matters: a wrong analytical
-      # derivative raises no error, it produces an optimiser that converges to
-      # the wrong answer.
-      - name: Build and verify Jacobians
-        run: |
-          g++ -std=c++17 -O2 -Iinclude -I/usr/include/eigen3 \
-              tests/test_jacobians.cpp -lgtsam -ltbb -o test_jacobians
-          ./test_jacobians
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
-      - name: Build and run the benchmark
+      - name: Install numpy for the independent Jacobian check
+        run: pip install numpy
+
+      # Built through CMake rather than by hand, because cmake and ctest are
+      # what the README tells a reader to run, and a build file that CI never
+      # exercises is a build file that quietly stops working.
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      # The Jacobian tests are the ones that matter: a wrong analytical
+      # derivative raises no error, it produces an optimiser that converges to
+      # the wrong answer. One checks against GTSAM's own retraction, the other
+      # against an independent numpy implementation.
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Run the benchmark
+        working-directory: build
+        run: ./viwo_benchmark | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Regenerate the trajectory figure
         run: |
-          g++ -std=c++17 -O2 -Iinclude -I/usr/include/eigen3 \
-              src/main_benchmark.cpp -lgtsam -ltbb -o viwo_benchmark
-          ./viwo_benchmark | tee -a "$GITHUB_STEP_SUMMARY"
+          pip install matplotlib
+          python3 scripts/plot_ate_trajectory.py build/trajectory_results.csv
+
+      - name: Upload the figure and the trajectory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trajectory
+          path: |
+            docs/ate_trajectory_plot.png
+            build/trajectory_results.csv

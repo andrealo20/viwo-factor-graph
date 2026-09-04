@@ -1,12 +1,11 @@
-
+# Factor-Graph Visual-Inertial-Wheel Odometry (VI-WO) Fusion
 
 [![ci](https://github.com/andrealo20/viwo-factor-graph/actions/workflows/ci.yml/badge.svg)](https://github.com/andrealo20/viwo-factor-graph/actions/workflows/ci.yml)
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)
 ![GTSAM](https://img.shields.io/badge/Library-GTSAM-orange.svg)
 ![Eigen3](https://img.shields.io/badge/Library-Eigen3-green.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
 ![Build](https://img.shields.io/badge/Build-CMake-red.svg)
-# Factor-Graph Visual-Inertial-Wheel Odometry (VI-WO) Fusion
 
 **VIWO (Visual-Inertial-Wheel Odometry) Factor Graph** is a C++17 state estimation engine designed for mobile robotics. It addresses the well-known metric scale drift in monocular visual-inertial navigation by incorporating wheel encoder measurements into an incremental factor graph optimization framework.
 
@@ -66,7 +65,6 @@ $$
 $$
 H_2 = \frac{\partial \mathbf{r}}{\partial T_j} = \begin{bmatrix} \mathbf{0}_{3 \times 3} & R_i^T R_j \end{bmatrix}
 $$
-  $$
 
 ## How the benchmark is constructed
 
@@ -114,8 +112,20 @@ taken under GTSAM's own retraction, over 200 random pose pairs:
 cd build && ctest --output-on-failure
 ```
 
-An equivalent check run independently in Python agreed with the analytical
-forms to a maximum absolute error of 8.9e-10, against a threshold of 1e-5.
+That check uses GTSAM's own retraction, which is the right comparison but
+shares GTSAM's conventions with the code under test. `scripts/check_jacobians.py`
+is the independent one: it reimplements the residual, the SE(3) retraction and
+both derivatives from scratch in numpy, with no GTSAM involved, so a shared
+misunderstanding cannot hide in both.
+
+```bash
+python3 scripts/check_jacobians.py
+```
+
+Over 200 random pose pairs it agrees with the analytical forms to a maximum
+absolute error of 1.1e-09 for `H1` and 1.2e-09 for `H2`, against a threshold
+of 1e-5. Negating either block, or swapping the relative rotation in `H2`,
+moves the disagreement to order 1.
 
 ## Repository Structure
 ```text
@@ -143,7 +153,9 @@ viwo-factor-graph/
 - C++17 Compiler
 - CMake >= 3.16
 - Eigen3
-- GTSAM >= 4.0
+- GTSAM 4.0 to 4.2. Not 4.3: it replaced `boost::optional` with
+  `std::optional` in the `NoiseModelFactor` interface that
+  `wheel_odometry_factor.hpp` overrides. CMake checks this and stops.
 
 ```bash
 mkdir build && cd build
