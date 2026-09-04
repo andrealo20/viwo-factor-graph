@@ -20,15 +20,23 @@ This repository introduces a custom **Wheel Odometry Factor** built for the GTSA
 
 | Method | Absolute Trajectory Error (ATE RMSE) | Drift Reduction |
 | :--- | :--- | :--- |
-| **VI Baseline** | 0.674 m | Baseline |
-| **VIWO Proposed** | **0.073 m** | **~89.2%** |
+| **VI Baseline** | pending | Baseline |
+| **VIWO Proposed** | pending | pending |
 
-These figures were regenerated against GTSAM 4.2 after fixing two invalid
-`ISAM2Params` member names that had prevented the project from compiling. An
-earlier version of this README quoted 0.246 m and 0.029 m; those could not be
-reproduced from the published source, so they have been replaced by numbers
-that can. Changing the ISAM2 relinearisation settings made no difference to
-the result, so the defaults are used.
+**The numbers are pending re-measurement and are deliberately not filled in.**
+Until recently this project had no inertial factor at all: it declared the
+symbols for velocity and bias, inserted them at every keyframe, and left them
+untouched by any factor, so ISAM2 never eliminated them and handed back
+whatever was inserted. Since the benchmark inserted ground truth, the
+"estimated" velocity was ground truth copied through, and the baseline called
+visual-inertial was visual only. Adding real IMU preintegration changes what
+both estimators compute, so the previous figures of 0.674 m and 0.073 m no
+longer describe this code and quoting them here would be quoting a
+measurement of something else.
+
+They will be filled in from a CI run, which is the only place in this project
+with GTSAM installed. The benchmark prints them, and the workflow uploads both
+the figure and the trajectory CSV as artifacts.
 
 **These numbers come from a simulated trajectory, not from recorded sensor
 data.** The experiment is described in full below, because the way it is
@@ -69,13 +77,25 @@ $$
 ## How the benchmark is constructed
 
 `src/main_benchmark.cpp` generates 100 keyframes at 10 Hz along a circular arc
-of radius 10 m at 0.1 rad/s, and feeds two estimators the same measurements:
+of radius 10 m at 0.1 rad/s, the arc a differential-drive platform follows at
+constant wheel speeds, and feeds two estimators the same measurements:
 
+* **Inertial measurements** at 200 Hz, derived analytically from the
+  trajectory: specific force `f_b = R_wb^T (a_w - g_w)` and body-frame angular
+  rate. On this arc that evaluates to a constant `(0, 0.1, 9.81)` m/s^2 and
+  `(0, 0, 0.1)` rad/s, but the code computes the general expression, because
+  the constant is right only by a cancellation and would silently become wrong
+  if the trajectory changed. A constant sensor bias and white noise at the
+  declared spectral densities are added, and the estimators are not told
+  either. Feeding the wrong gravity convention here is the classic way to get
+  this wrong, and it is not subtle: it produces hundreds of metres of vertical
+  error over the ten second run.
 * **Visual relative motion** is taken from ground truth and then scaled by a
-  factor that grows to 1.30 by the last keyframe — a deterministic 30 % metric
+  factor that grows to 1.30 by the last keyframe, a deterministic 30 % metric
   scale drift, which is the failure mode the wheel factor exists to correct.
 * **Wheel displacement** is the true forward speed of 1 m/s times the timestep,
-  plus Gaussian noise with a standard deviation of 0.015 m.
+  plus Gaussian noise with a standard deviation of 0.015 m, which is also the
+  sigma the factor is given.
 
 Both estimators are identical except that the VIWO graph also receives the
 wheel factor.
@@ -89,11 +109,12 @@ what the result shows:
    it is fused rather than trusted outright.
 2. **The visual drift is deterministic and monotonic.** Real scale drift is a
    random walk driven by the observability of the scene, not a fixed ramp.
-3. **Every new pose is initialised at ground truth.** `stepOptimization()`
-   inserts the true pose and velocity as the linearisation point for each new
-   keyframe. Both estimators get the same treatment so the comparison between
-   them stays fair, but it removes the initialisation problem that a real
-   system has to solve, and it flatters both trajectories.
+3. **The vertical accelerometer bias is not simulated.** The path is level and
+   turns only in yaw, so the body z axis never tilts and a constant bias on
+   the vertical accelerometer axis is indistinguishable from an error in the
+   gravity magnitude. It is structurally unobservable here, not merely weakly
+   observed, so the simulator injects none and the prior holds it at zero. A
+   trajectory with pitch or roll excitation would observe it.
 
 Running the same pipeline on a public dataset — EuRoC MAV or KITTI — with real
 IMU, camera and wheel streams is the natural next step and is not done here.
