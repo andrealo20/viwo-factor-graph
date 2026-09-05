@@ -92,9 +92,19 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure
 
+      # The results also become an annotation, so the headline numbers are on
+      # the run page next to the pass mark rather than only inside the log.
       - name: Run the benchmark
         working-directory: build
-        run: ./viwo_benchmark | tee -a "$GITHUB_STEP_SUMMARY"
+        run: |
+          ./viwo_benchmark | tee benchmark.txt
+          {
+            echo "### Benchmark"
+            echo '```'
+            cat benchmark.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          python3 -c "print('::notice title=Benchmark results::'+open('benchmark.txt',errors='replace').read().replace(chr(10),'%0A'))"
 
       - name: Regenerate the trajectory figure
         run: |
