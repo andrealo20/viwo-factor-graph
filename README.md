@@ -20,23 +20,30 @@ This repository introduces a custom **Wheel Odometry Factor** built for the GTSA
 
 | Method | Absolute Trajectory Error (ATE RMSE) | Drift Reduction |
 | :--- | :--- | :--- |
-| **VI Baseline** | pending | Baseline |
-| **VIWO Proposed** | pending | pending |
+| **VI Baseline** | 0.671 m | Baseline |
+| **VIWO Proposed** | **0.061 m** | **90.9%** |
 
-**The numbers are pending re-measurement and are deliberately not filled in.**
-Until recently this project had no inertial factor at all: it declared the
+Measured by the CI run of the commit that introduced them, against GTSAM 4.2
+on Ubuntu. The error is computed over the final smoothed trajectory rather
+than over each pose at the moment it was added, which is the difference
+between an absolute trajectory error and a filtered one.
+
+Until recently this project had no inertial factor at all. It declared the
 symbols for velocity and bias, inserted them at every keyframe, and left them
 untouched by any factor, so ISAM2 never eliminated them and handed back
-whatever was inserted. Since the benchmark inserted ground truth, the
+whatever had been inserted. Since the benchmark inserted ground truth, the
 "estimated" velocity was ground truth copied through, and the baseline called
-visual-inertial was visual only. Adding real IMU preintegration changes what
-both estimators compute, so the previous figures of 0.674 m and 0.073 m no
-longer describe this code and quoting them here would be quoting a
-measurement of something else.
+visual-inertial was visual only. An earlier version of this README quoted
+0.674 m and 0.073 m for that arrangement.
 
-They will be filled in from a CI run, which is the only place in this project
-with GTSAM installed. The benchmark prints them, and the workflow uploads both
-the figure and the trajectory CSV as artifacts.
+The bias estimates are the evidence that the inertial states are now
+constrained: the benchmark prints them next to the values it injected, and
+they move off the zero they were initialised at. They do not converge to the
+true bias. Ten seconds of a level, constant-rate arc observes it weakly, the
+visual factor is two orders of magnitude looser than the preintegrated one,
+and the accelerometer bias mostly ends up absorbed into the trajectory rather
+than identified. That is a property of this trajectory, not a bug, and it is
+the reason the vertical component is held by a prior instead of estimated.
 
 **These numbers come from a simulated trajectory, not from recorded sensor
 data.** The experiment is described in full below, because the way it is
