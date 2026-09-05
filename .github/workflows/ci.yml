@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtsam-dev libeigen3-dev libboost-all-dev libtbb-dev
+          sudo apt-get install -y libgtsam-dev libeigen3-dev libboost-all-dev libtbb-dev libmetis-dev
 
       # Ubuntu's libgtsam-dev ships GTSAM-exports.cmake with an imported
       # CppUnitLite target pointing at libCppUnitLite.a, and does not install

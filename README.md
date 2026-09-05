@@ -189,6 +189,12 @@ nothing here links it, so an empty archive is enough to get past it:
 sudo ar rcs /usr/lib/x86_64-linux-gnu/libCppUnitLite.a
 ```
 
+The same package also links `libmetis.so` from its exported target without
+depending on the package that installs it, so `libmetis-dev` has to be
+installed alongside `libgtsam-dev` or the link fails with "No rule to make
+target". Both gaps are in the packaging, not in GTSAM: a build from source
+needs neither workaround.
+
 ```bash
 mkdir build && cd build
 cmake ..
