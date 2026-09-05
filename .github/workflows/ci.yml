@@ -34,8 +34,23 @@ jobs:
       # Built through CMake rather than by hand, because cmake and ctest are
       # what the README tells a reader to run, and a build file that CI never
       # exercises is a build file that quietly stops working.
+      # The configure output is copied into the job summary, and on failure
+      # the CMake error is also emitted as an annotation. Both are readable on
+      # the run page, so a broken configure says what broke rather than only
+      # reporting an exit code.
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        run: |
+          set +e
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release 2>&1 | tee configure.log
+          status=${PIPESTATUS[0]}
+          echo "### CMake configure" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat configure.log >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          if [ "$status" -ne 0 ]; then
+            python3 -c "log=open('configure.log',errors='replace').read();i=log.lower().find('cmake error');s=log[max(0,i-300):i+1500] if i>=0 else log[-1500:];print('::error title=CMake configure failed::'+s.replace(chr(10),'%0A'))"
+          fi
+          exit "$status"
 
       - name: Build
         run: cmake --build build --parallel
