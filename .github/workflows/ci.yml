@@ -13,10 +13,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # libboost-all-dev, not libboost-dev: the latter is headers only.
+      # GTSAMConfig.cmake calls find_dependency(Boost), which in config mode
+      # looks for boost_serialization and the other compiled components, and
+      # fails to configure without them. Building by hand with -lgtsam never
+      # went through GTSAM's config, so this only surfaced once the build
+      # moved to CMake.
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtsam-dev libeigen3-dev libboost-dev libtbb-dev
+          sudo apt-get install -y libgtsam-dev libeigen3-dev libboost-all-dev libtbb-dev
 
       - uses: actions/setup-python@v5
         with:
