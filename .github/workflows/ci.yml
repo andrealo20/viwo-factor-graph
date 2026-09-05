@@ -66,8 +66,23 @@ jobs:
           fi
           exit "$status"
 
+      # Same treatment as configure: the compiler diagnostics reach the run
+      # page rather than only the step log.
       - name: Build
-        run: cmake --build build --parallel
+        run: |
+          set +e
+          cmake --build build --parallel 2>&1 | tee build.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            {
+              echo "### Build output"
+              echo '```'
+              tail -c 60000 build.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            python3 -c "import re;log=open('build.log',errors='replace').read();hits=[m.start() for m in re.finditer(r'error:',log)];s=log[max(0,hits[0]-800):hits[0]+2000] if hits else log[-2000:];print('::error title=Build failed::'+s.replace(chr(10),'%0A'))"
+          fi
+          exit "$status"
 
       # The Jacobian tests are the ones that matter: a wrong analytical
       # derivative raises no error, it produces an optimiser that converges to
