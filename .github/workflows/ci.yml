@@ -24,6 +24,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtsam-dev libeigen3-dev libboost-all-dev libtbb-dev
 
+      # Ubuntu's libgtsam-dev ships GTSAM-exports.cmake with an imported
+      # CppUnitLite target pointing at libCppUnitLite.a, and does not install
+      # that file. find_package(GTSAM) then aborts with a hard error on an
+      # otherwise working install. CppUnitLite is GTSAM's own test framework
+      # and nothing here links it, so an empty archive satisfies the existence
+      # check without changing what gets built.
+      - name: Work around the missing CppUnitLite archive
+        run: |
+          lib=/usr/lib/x86_64-linux-gnu/libCppUnitLite.a
+          if [ ! -f "$lib" ]; then
+            sudo ar rcs "$lib"
+            echo "created an empty $lib"
+          fi
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

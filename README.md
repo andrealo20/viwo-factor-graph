@@ -176,7 +176,18 @@ viwo-factor-graph/
 - Eigen3
 - GTSAM 4.0 to 4.2. Not 4.3: it replaced `boost::optional` with
   `std::optional` in the `NoiseModelFactor` interface that
-  `wheel_odometry_factor.hpp` overrides. CMake checks this and stops.
+  `wheel_odometry_factor.hpp` overrides. CMake warns when it can read the
+  version and sees one outside that range.
+
+On Debian and Ubuntu, `libgtsam-dev` ships `GTSAM-exports.cmake` with an
+imported `CppUnitLite` target pointing at a static library the package does
+not install, so `find_package(GTSAM)` fails with a hard error before it gets
+to anything in this repository. CppUnitLite is GTSAM's own test framework and
+nothing here links it, so an empty archive is enough to get past it:
+
+```sh
+sudo ar rcs /usr/lib/x86_64-linux-gnu/libCppUnitLite.a
+```
 
 ```bash
 mkdir build && cd build
